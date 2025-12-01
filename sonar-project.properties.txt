@@ -1,9 +1,0 @@
-sonar.projectKey=FlightBookingMicroservices
-sonar.projectName=FlightBookingMicroservices
-sonar.projectVersion=1.0
-sonar.sources=.
-sonar.sourceEncoding=UTF-8
-sonar.java.binaries=**/target/classes
-
-# Exclude modules without unit tests from coverage calculation
-sonar.coverage.exclusions=**/FlightAPIGateway/**, **/ConfigServer/**, **/EurekaServer/**, **/CircuitBreaker/**, **/*Application.java
