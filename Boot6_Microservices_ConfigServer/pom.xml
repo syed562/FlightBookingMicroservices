@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.app</groupId>
-	<artifactId>Boot6_Microservices_APIGateway</artifactId>
+	<artifactId>Boot6_Microservices_ConfigServer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Boot6_Microservices_ConfigServer</name>
 	<description>Demo project for Spring Boot microservices</description>
