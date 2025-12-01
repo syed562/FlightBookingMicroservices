@@ -1,0 +1,252 @@
+{
+	"info": {
+		"_postman_id": "dfaa0711-7f01-4b54-9576-7a6ec0c9d6cd",
+		"name": "MicroService-FlightBooking",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47761514",
+		"_collection_link": "https://syedsabiha982-9804456.postman.co/workspace/Syed-Sabiha's-Workspace~ff2dc3a3-ad18-4b68-8cd9-58ca215bed49/collection/47761514-dfaa0711-7f01-4b54-9576-7a6ec0c9d6cd?action=share&source=collection_link&creator=47761514"
+	},
+	"item": [
+		{
+			"name": "to  get all flights",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"category\":\"Social\",\r\n  \"questionTitle\": \"Which planet is known as the Red Planet?\",\r\n  \"option1\": \"Earth\",\r\n  \"option2\": \"Mars\",\r\n  \"option3\": \"Jupiter\",\r\n  \"option4\": \"Venus\",\r\n  \"rightAnswer\": \"Mars\",\r\n  \"difficultyLevel\": \"Easy\"\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/flight/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"flight",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to book ticket from bookinservice taking help of flight service",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userName\": \"Nidhish\",\r\n  \"emailId\": \"nidhish@gmail.com\",\r\n  \"numberOfSeats\": 3,\r\n  \"passengers\": [\r\n    { \"passenger_name\": \"Nidhish\", \"gender\": \"Male\", \"age\": 24, \"mealType\": \"Veg\", \"seatNo\": \"21A\" },\r\n    { \"passenger_name\": \"Abdul\",   \"gender\": \"Male\", \"age\": 27, \"mealType\": \"Non-Veg\", \"seatNo\": \"21B\" },\r\n    { \"passenger_name\": \"Sami\",    \"gender\": \"Male\", \"age\": 26, \"mealType\": \"Veg\", \"seatNo\": \"21C\" }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8091/booking/book/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8091",
+					"path": [
+						"booking",
+						"book",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to search flights by details",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fromPlace\":\"Chennai\",\r\n    \"toPlace\":\"Kolkata\",\r\n    \"departDate\":\"2025-12-10\",\r\n    \"tripType\":\"ONE-WAY\"\r\n\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8091/booking/getFlights",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8091",
+					"path": [
+						"booking",
+						"getFlights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to get ticket by pnr",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fromPlace\":\"Chennai\",\r\n    \"toPlace\":\"Kolkata\",\r\n    \"departDate\":\"2025-12-10\",\r\n    \"tripType\":\"ONE-WAY\"\r\n\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:8091/booking/getByPnr/PNR20251130G9YA",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8091",
+					"path": [
+						"booking",
+						"getByPnr",
+						"PNR20251130G9YA"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to delete by pnr",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fromPlace\":\"Chennai\",\r\n    \"toPlace\":\"Kolkata\",\r\n    \"departDate\":\"2025-12-10\",\r\n    \"tripType\":\"ONE-WAY\"\r\n\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:8091/booking/delete/PNR20251130G9YA",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8091",
+					"path": [
+						"booking",
+						"delete",
+						"PNR20251130G9YA"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to get flight through api",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/flight/get/1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"flight",
+						"get",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ticket by pnr through api",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userName\": \"Nidhish\",\r\n  \"emailId\": \"nidhish@gmail.com\",\r\n  \"numberOfSeats\": 3,\r\n  \"passengers\": [\r\n    { \"passenger_name\": \"Nidhish\", \"gender\": \"Male\", \"age\": 24, \"mealType\": \"Veg\", \"seatNo\": \"21A\" },\r\n    { \"passenger_name\": \"Abdul\",   \"gender\": \"Male\", \"age\": 27, \"mealType\": \"Non-Veg\", \"seatNo\": \"21B\" },\r\n    { \"passenger_name\": \"Sami\",    \"gender\": \"Male\", \"age\": 26, \"mealType\": \"Veg\", \"seatNo\": \"21C\" }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8765/booking/getByPnr/PNR20251201C70K",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8765",
+					"path": [
+						"booking",
+						"getByPnr",
+						"PNR20251201C70K"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "to delete by pnr through api",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/booking/delete/PNR20251201C70K",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"booking",
+						"delete",
+						"PNR20251201C70K"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": ""
+		}
+	]
+}
