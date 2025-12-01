@@ -21,148 +21,154 @@ import com.app.models.PnrGenerator;
 import com.app.repo.BookingRepo;
 import com.app.repo.PassengerRepo;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 @Service
-public class BookingService  implements BookingServiceInterface{
-	  @Autowired
-	    private BookingRepo bookingRepository;
-	    
-	  @Autowired
-	    private PassengerRepo passengerRepository;
-	  
-	  @Autowired
-	  BookingInterface bint;
+public class BookingService {
 
-	  public BookingResponse bookTicket(Long flightId, BookingRequest bookingRequest) {
+    @Autowired 
+    private BookingRepo bookingRepository;
+    @Autowired 
+    private PassengerRepo passengerRepository;
+    @Autowired 
+    private BookingInterface bint;
 
-		    FlightResponse flight = bint.getFlightById(flightId).getBody();
+  
+    @CircuitBreaker(name = "flightService", fallbackMethod = "fallbackBookTicket")
+    public BookingResponse bookTicket(Long flightId, BookingRequest bookingRequest) {
 
-		    if (flight.getAvailableSeats() == null || flight.getAvailableSeats() < bookingRequest.getNumberOfSeats()) {
-		        throw new RuntimeException("Not enough seats available");
-		    }
+        FlightResponse flight = bint.getFlightById(flightId).getBody();
+        if (flight.getAvailableSeats() < bookingRequest.getNumberOfSeats()) {
+            throw new RuntimeException("Not enough seats available");
+        }
 
-		    if (bookingRequest.getPassengers().size() != bookingRequest.getNumberOfSeats()) {
-		        throw new RuntimeException("Passenger count does not match number of seats");
-		    }
+        Booking booking = new Booking();
+        booking.setPnr(PnrGenerator.generatePnr());
+        booking.setFlightId(flightId);
+        booking.setEmailId(bookingRequest.getEmailId());
+        booking.setUserName(bookingRequest.getUserName());
+        booking.setNumberOfSeats(bookingRequest.getNumberOfSeats());
+        booking.setBookingDate(LocalDateTime.now());
+        booking.setStatus("CONFIRMED");
+        booking.setTotalAmount(flight.getPrice() * bookingRequest.getNumberOfSeats());
+        booking = bookingRepository.save(booking);
 
-		    Booking booking = new Booking();
-		    booking.setPnr(PnrGenerator.generatePnr());
-		    booking.setFlightId(flightId);
-		    booking.setEmailId(bookingRequest.getEmailId());
-		    booking.setUserName(bookingRequest.getUserName());
-		    booking.setNumberOfSeats(bookingRequest.getNumberOfSeats());
-		    booking.setBookingDate(LocalDateTime.now());
-		    booking.setStatus("CONFIRMED");
-		    booking.setTotalAmount(flight.getPrice() * bookingRequest.getNumberOfSeats());
+        List<Passenger> passengers = new ArrayList<>();
+        for (PassengerDetails pd : bookingRequest.getPassengers()) {
+            Passenger p = new Passenger();
+            p.setBooking(booking);
+            p.setPassenger_name(pd.getPassenger_name());
+            p.setGender(pd.getGender());
+            p.setAge(pd.getAge());
+            p.setMealPreference(pd.getMealPreference());
+            p.setSeatNumber(pd.getSeatNo());
+            passengers.add(p);
+        }
+        passengerRepository.saveAll(passengers);
+        booking.setPassengers(passengers);
 
-		    booking = bookingRepository.save(booking);
-
-		    List<Passenger> passengers = new ArrayList<>();
-		    for (PassengerDetails pd : bookingRequest.getPassengers()) {
-		        Passenger passenger = new Passenger();
-		        passenger.setBooking(booking);
-		        passenger.setPassenger_name(pd.getPassenger_name());
-		        passenger.setGender(pd.getGender());
-		        passenger.setAge(pd.getAge());
-		        passenger.setMealPreference(pd.getMealPreference()); // fixed
-		        passenger.setSeatNumber(pd.getSeatNo());
-		        passengers.add(passenger);
-		    }
-
-		    passengerRepository.saveAll(passengers);
-		    booking.setPassengers(passengers);
-		    bookingRepository.save(booking); 
-
-		    int updatedSeats = flight.getAvailableSeats() - bookingRequest.getNumberOfSeats();
-		    bint.updateFlightSeats(flightId, updatedSeats);
-
-		    return mapToBookingResponse(booking, flight);
-		}
-	  
-	  public List<FlightResponse> searchFlights(FlightRequestSearch frs) {
-		  List<FlightResponse> flights = bint.searchFlights(frs);
-		  if (flights == null || flights.isEmpty()) {
-		      throw new RuntimeException("No flights found");
-		  }
-
-	       return bint.searchFlights(frs);
-	    }
-
-	  public BookingResponse getTicketByPnr(String pnr) {
-		    Booking booking = bookingRepository.findByPnr(pnr)
-		        .orElseThrow(() -> new RuntimeException("Booking not found with PNR: " + pnr));
-
-		    FlightResponse flight = bint.getFlightById(booking.getFlightId()).getBody();
-
-		    return mapToBookingResponse(booking, flight);
-		}
+        bint.updateFlightSeats(flightId, flight.getAvailableSeats() - bookingRequest.getNumberOfSeats());
+        return mapToResponse(booking, flight);
+    }
 
 
-	  private BookingResponse mapToBookingResponse(Booking booking, FlightResponse flight) {
-		    BookingResponse response = new BookingResponse();
-		    
-		    response.setPnr(booking.getPnr());
-		    response.setUserName(booking.getUserName());
-		    response.setEmailId(booking.getEmailId());
-		    response.setNumberOfSeats(booking.getNumberOfSeats());
-		    response.setBookingDate(booking.getBookingDate());
-		    response.setStatus(booking.getStatus());
-		    response.setTotalAmount(booking.getTotalAmount());
-		    response.setFlightId(flight.getFlightId());
-		    
-		    
-		    response.setAirlineName(flight.getAirlineName());
-		    response.setFlightNumber(flight.getFlightNumber());
-		    response.setFromPlace(flight.getFromPlace());
-		    response.setToPlace(flight.getToPlace());
-		    response.setDepartureTime(flight.getDepartTime());
+  
+    @CircuitBreaker(name = "flightService", fallbackMethod = "fallbackSearchFlights")
+    public List<FlightResponse> searchFlights(FlightRequestSearch frs) {
+        return bint.searchFlights(frs);
+    }
 
-		    
-		    List<PassengerDetails> passengerDetailsList = booking.getPassengers().stream()
-		        .map(p -> {
-		            PassengerDetails pd = new PassengerDetails();
-		            pd.setPassenger_name(p.getPassenger_name());
-		            pd.setGender(p.getGender());
-		            pd.setAge(p.getAge());
-		            pd.setMealType(p.getMealPreference());
-		            pd.setSeatNo(p.getSeatNumber());
-		            return pd;
-		        })
-		        .collect(Collectors.toList());
-		    response.setPassengers(passengerDetailsList);
 
-		    return response;
-		}
+ 
+    @CircuitBreaker(name = "flightService", fallbackMethod = "fallbackGetTicket")
+    public BookingResponse getTicketByPnr(String pnr) {
+        Booking booking = bookingRepository.findByPnr(pnr)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-	  public String cancelBooking(String pnr) {
-	        Booking booking = bookingRepository.findByPnr(pnr)
-	            .orElseThrow(() -> new RuntimeException("Booking not found with PNR: " + pnr));
-	        
-	        FlightResponse flight = bint.getFlightById(booking.getFlightId()).getBody();
+        FlightResponse flight = bint.getFlightById(booking.getFlightId()).getBody();
+        
+        return mapToResponse(booking, flight);
+    }
+    
+    @CircuitBreaker(name = "flightService", fallbackMethod = "fallbackCancelBooking")
+    public String cancelBooking(String pnr) {
 
-	       
-	        if ("CANCELLED".equals(booking.getStatus())) {
-	            throw new RuntimeException("Booking is already cancelled");
-	        }
-	        
-	        
-	        long hoursUntilDeparture = ChronoUnit.HOURS.between(
-	                LocalDateTime.now(),
-	                flight.getDepartTime()
-	        );
+        Booking booking = bookingRepository.findByPnr(pnr)
+            .orElseThrow(() -> new RuntimeException("Booking not found with PNR: " + pnr));
 
-	        if (hoursUntilDeparture < 24) {
-	            throw new RuntimeException("Cannot cancel booking within 24 hours of departure");
-	        }
-	        
-	        
-	        booking.setStatus("CANCELLED");
-	        bookingRepository.save(booking);
-	        
-	        int updatedSeats = flight.getAvailableSeats() + booking.getNumberOfSeats();
-	        bint.updateFlightSeats(booking.getFlightId(), updatedSeats);
+        FlightResponse flight = bint.getFlightById(booking.getFlightId()).getBody();
 
-	        
-	        return "Booking cancelled successfully. PNR: " + pnr;
-	    }
+        if ("CANCELLED".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already cancelled");
+        }
+
+        long hoursUntilDeparture = ChronoUnit.HOURS.between(
+                LocalDateTime.now(), flight.getDepartTime()
+        );
+
+        if (hoursUntilDeparture < 24) {
+            throw new RuntimeException("Cannot cancel booking within 24 hours of departure");
+        }
+
+        booking.setStatus("CANCELLED");
+        bookingRepository.save(booking);
+
+        int updatedSeats = flight.getAvailableSeats() + booking.getNumberOfSeats();
+        bint.updateFlightSeats(booking.getFlightId(), updatedSeats);
+
+        return "Booking cancelled successfully. PNR: " + pnr;
+    }
+
+
+
+
+    public BookingResponse fallbackBookTicket(Long flightId, BookingRequest bookingRequest, Throwable ex) {
+        BookingResponse res = new BookingResponse();
+        res.setPnr("N/A");
+        res.setStatus("FAILED - Flight Service Down");
+        res.setUserName(bookingRequest.getUserName());
+        res.setEmailId(bookingRequest.getEmailId());
+        res.setNumberOfSeats(bookingRequest.getNumberOfSeats());
+        res.setTotalAmount(0.0);
+     
+        return res;
+    }
+
+    public List<FlightResponse> fallbackSearchFlights(FlightRequestSearch frs, Throwable ex) {
+        return new ArrayList<>(); 
+    }
+
+    public BookingResponse fallbackGetTicket(String pnr, Throwable ex) {
+        BookingResponse response = new BookingResponse();
+        response.setPnr(pnr);
+        response.setStatus("FAILED - Flight Service Down");
+      
+        return response;
+    }
+
+
+    /* -------------------------------------------------------------- */
+    private BookingResponse mapToResponse(Booking booking, FlightResponse flight) {
+        BookingResponse response = new BookingResponse();
+        response.setPnr(booking.getPnr());
+        response.setUserName(booking.getUserName());
+        response.setEmailId(booking.getEmailId());
+        response.setNumberOfSeats(booking.getNumberOfSeats());
+        response.setBookingDate(booking.getBookingDate());
+        response.setStatus(booking.getStatus());
+        response.setTotalAmount(booking.getTotalAmount());
+        response.setFlightId(flight.getFlightId());
+        response.setFromPlace(flight.getFromPlace());
+        response.setToPlace(flight.getToPlace());
+        response.setAirlineName(flight.getAirlineName());
+        response.setFlightNumber(flight.getFlightNumber());
+        response.setDepartureTime(flight.getDepartTime());
+        return response;
+    }
+    
+    public String fallbackCancelBooking(String pnr, Throwable ex) {
+        return "Cancellation failed because Flight Service is unavailable. " +
+               "Please try again later. (PNR: " + pnr + ")";
+    }
 
 }

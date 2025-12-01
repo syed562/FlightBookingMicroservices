@@ -15,7 +15,7 @@ import com.app.dto.FlightResponse;
 
 import jakarta.validation.Valid;
 
-@FeignClient("FLIGHTSERVICE")
+@FeignClient(name="FLIGHTSERVICE")
 public interface BookingInterface {
     @GetMapping("flight/get/{id}")
    public ResponseEntity<FlightResponse>getFlightById(@PathVariable Long id);
