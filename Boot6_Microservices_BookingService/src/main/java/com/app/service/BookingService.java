@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.app.dto.BookingRequest;
@@ -32,6 +32,8 @@ public class BookingService {
     private PassengerRepo passengerRepository;
     @Autowired 
     private BookingInterface bint;
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
   
     @CircuitBreaker(name = "flightService", fallbackMethod = "fallbackBookTicket")
@@ -68,6 +70,12 @@ public class BookingService {
         booking.setPassengers(passengers);
 
         bint.updateFlightSeats(flightId, flight.getAvailableSeats() - bookingRequest.getNumberOfSeats());
+        String event = "Ticket booked for passengers=" + bookingRequest.getPassengers()
+        + ", flightId=" + flight.getFlightId()
+        + ", pnr=" + booking.getPnr();
+kafkaTemplate.send("ticket-booked",event);
+        
+        
         return mapToResponse(booking, flight);
     }
 
