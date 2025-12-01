@@ -20,14 +20,13 @@
 					"raw": "{\r\n    \"category\":\"Social\",\r\n  \"questionTitle\": \"Which planet is known as the Red Planet?\",\r\n  \"option1\": \"Earth\",\r\n  \"option2\": \"Mars\",\r\n  \"option3\": \"Jupiter\",\r\n  \"option4\": \"Venus\",\r\n  \"rightAnswer\": \"Mars\",\r\n  \"difficultyLevel\": \"Easy\"\r\n}\r\n"
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/flight/",
+					"raw": "http://localhost:8080/flight/",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
-						"api",
 						"flight",
 						""
 					]
